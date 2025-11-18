@@ -11,7 +11,7 @@ builder.Services.AddSwaggerGen(
 //options.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
 //{
 //    Title = "Catalog.API",
-//    Version = "v1",
+//    Version = "v1", 
 //    Description = "The Catalog Microservice HTTP API. This is a Data-Driven/CRUD microservice sample",
 //} 
 );
