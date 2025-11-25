@@ -16,7 +16,11 @@ namespace Catalog.Core.Repositories
 
         Task<Entities.Product> GetProductByNameAsync(string name);
 
+        Task<IEnumerable<Entities.Product>> GetProductsByNameAsync(string name);
+
         Task<Entities.Product> GetProductByBrandAsync(string name);
+
+        Task<IEnumerable<Entities.Product>> GetProductsByBrandAsync(string brandName);
 
         Task<bool>CreateProductAsync(Product Product);
         Task<bool> UpdateProductAsync(Product Product);

@@ -1,5 +1,8 @@
 ﻿using Catalog.Core.Entities;
 using Catalog.Core.Repositories;
+using Catalog.Infrastructure.Contexts;
+
+using MongoDB.Driver;
 
 using System;
 using System.Collections.Generic;
@@ -11,49 +14,93 @@ namespace Catalog.Infrastructure.Repositories
 {
     public class ProductRepository : IProductRepository, IBrandRepository, ITypeRepository
     {
-        public Task<IEnumerable<Product>> GetProductsAsync()
+        private readonly ICatalgContext _context;
+
+        public ProductRepository(ICatalgContext context)
         {
-            throw new NotImplementedException();
+            _context = context;
         }
 
-        public Task<Product> GetProductByIdAsync(string id)
+        // =================== Products ===================
+
+        public async Task<IEnumerable<Product>> GetProductsAsync()
         {
-            throw new NotImplementedException();
+            return await _context.Products.Find(p => true).ToListAsync();
         }
 
-        public Task<Product> GetProductByNameAsync(string name)
+        public async Task<Product> GetProductByIdAsync(string id)
         {
-            throw new NotImplementedException();
+            return await _context.Products.Find(p => p.Id == id).FirstOrDefaultAsync();
+
+
         }
 
-        public Task<Product> GetProductByBrandAsync(string name)
+
+        public async Task<Product> GetProductByNameAsync(string name)
         {
-            throw new NotImplementedException();
+            return await _context.Products
+                .Find(p => p.Name == name)
+                .FirstOrDefaultAsync();
         }
 
-        public Task<bool> CreateProductAsync(Product Product)
+        public async Task<IEnumerable<Product>> GetProductsByNameAsync(string name)
         {
-            throw new NotImplementedException();
+            var filter = Builders<Product>.Filter.Regex(p => p.Name, new MongoDB.Bson.BsonRegularExpression(name, "i"));
+            return await _context.Products.Find(filter).ToListAsync();
         }
 
-        public Task<bool> UpdateProductAsync(Product Product)
+        public async Task<Product> GetProductByBrandAsync(string brandName)
         {
-            throw new NotImplementedException();
+            return await _context.Products
+                .Find(p => p.Brand.Name == brandName)
+                .FirstOrDefaultAsync();
         }
 
-        public Task<bool> DeleteProductAsync(string id)
+        public async Task<IEnumerable<Product>> GetProductsByBrandAsync(string brandName)
         {
-            throw new NotImplementedException();
+            var filter = Builders<Product>.Filter.Regex(p => p.Brand.Name, new MongoDB.Bson.BsonRegularExpression(brandName, "i"));
+            return await _context.Products.Find(filter).ToListAsync();
         }
 
-        public Task<IEnumerable<ProductBrand>> GetBrandsAsync()
+        public async Task<bool> CreateProductAsync(Product product)
         {
-            throw new NotImplementedException();
+            await _context.Products.InsertOneAsync(product);
+            return true;
         }
 
-        public Task<IEnumerable<ProductType>> GetTypesAsync()
+        public async Task<bool> UpdateProductAsync(Product product)
         {
-            throw new NotImplementedException();
+            var result = await _context.Products
+                .ReplaceOneAsync(p => p.Id == product.Id, product);
+
+            return result.ModifiedCount > 0;
+        }
+
+        public async Task<bool> DeleteProductAsync(string id)
+        {
+            var result = await _context.Products
+                .DeleteOneAsync(p => p.Id == id);
+
+            return result.DeletedCount > 0 && result.IsAcknowledged;
+        }
+
+        // =================== Brands ===================
+
+        public async Task<IEnumerable<ProductBrand>> GetBrandsAsync()
+        {
+            return await _context.Brands
+                .Find(b => true)
+                .ToListAsync();
+        }
+
+        // =================== Types ===================
+
+        public async Task<IEnumerable<ProductType>> GetTypesAsync()
+        {
+            return await _context.Types
+                .Find(t => true)
+                .ToListAsync();
         }
     }
 }
+
