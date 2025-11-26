@@ -1,7 +1,7 @@
 using Catalog.Application.Mapper;
 using Catalog.Application.Queries;
 using Catalog.Core.Repositories;
-using Catalog.Infrastructure.Contexts;
+using Catalog.Infrastructure.Data.Contexts;
 using Catalog.Infrastructure.Repositories;
 
 using Microsoft.Extensions.DependencyInjection;

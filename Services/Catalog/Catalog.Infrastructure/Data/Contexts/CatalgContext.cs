@@ -10,7 +10,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Catalog.Infrastructure.Contexts
+namespace Catalog.Infrastructure.Data.Contexts
 {
     public class CatalgContext:ICatalgContext
     {

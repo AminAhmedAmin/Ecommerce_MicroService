@@ -9,19 +9,19 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 
-namespace Catalog.Infrastructure.Contexts
+namespace Catalog.Infrastructure.Data.Contexts
 {
-    public  static class BrandContextSeed
+    public static class ProductContextSeed
     {
-        public static async Task SeedDataAsync(IMongoCollection<ProductBrand> brandCollection)
+        public static async Task SeedDataAsync(IMongoCollection<Product> productCollection)
         {
             // 1) Check if collection already has data
-            var hasBrands = await brandCollection.Find(_ => true).AnyAsync();
-            if (hasBrands)
+            var hasproducts = await productCollection.Find(_ => true).AnyAsync();
+            if (hasproducts)
                 return;
 
             // 2) Build file path
-            var filePath = Path.Combine("Data", "SeedData", "brands.json");
+            var filePath = Path.Combine("Data", "SeedData", "products.json");
 
             if (!File.Exists(filePath))
             {
@@ -33,16 +33,15 @@ namespace Catalog.Infrastructure.Contexts
             var brandData = await File.ReadAllTextAsync(filePath);
 
             // 4) Deserialize
-            var brands = JsonSerializer.Deserialize<List<ProductBrand>>(brandData);
+            var Products = JsonSerializer.Deserialize<List<Product>>(brandData);
 
-            if (brands == null || brands.Count == 0)
+            if (Products == null || Products.Count == 0)
                 return;
 
             // 5) Insert into MongoDB
-            await brandCollection.InsertManyAsync(brands);
+            await productCollection.InsertManyAsync(Products);
 
-            Console.WriteLine("Brand seed completed.");
+            Console.WriteLine("Products seed completed.");
         }
-
     }
 }

@@ -8,10 +8,10 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 
-namespace Catalog.Infrastructure.Contexts
+namespace Catalog.Infrastructure.Data.Contexts
 {
-    public class TypeContextSeed
-	{
+    public static class TypeContextSeed
+    {
 
 		public static async Task SeedDataAsync(IMongoCollection<ProductType> brandCollection)
 		{

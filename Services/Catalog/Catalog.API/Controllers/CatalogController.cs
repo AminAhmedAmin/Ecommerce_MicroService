@@ -24,6 +24,24 @@ namespace Catalog.API.Controllers
             return Ok(products);
         }
 
+        [HttpGet("[action]")]
+        [ProducesResponseType(typeof(IList<BrandResponseDto>), StatusCodes.Status200OK)]
+        public async Task<ActionResult<IList<BrandResponseDto>>> GetAllBrands()
+        {
+            var query = new GetAllBrandQuery();
+            var brands = await mediator.Send(query);
+            return Ok(brands);
+        }
+
+        [HttpGet("[action]")]
+        [ProducesResponseType(typeof(IList<TypeResponseDto>), StatusCodes.Status200OK)]
+        public async Task<ActionResult<IList<TypeResponseDto>>> GetAllTypes()
+        {
+            var query = new GetAllTypeQuery();
+            var types = await mediator.Send(query);
+            return Ok(types);
+        }
+
         [HttpGet("[action]/{id}")]
         [ProducesResponseType(typeof(ProductResponseDto), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]

@@ -1,6 +1,6 @@
 ﻿using Catalog.Core.Entities;
 using Catalog.Core.Repositories;
-using Catalog.Infrastructure.Contexts;
+using Catalog.Infrastructure.Data.Contexts;
 
 using MongoDB.Driver;
 
