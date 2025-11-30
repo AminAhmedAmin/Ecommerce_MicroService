@@ -1,4 +1,5 @@
 ﻿using Catalog.Core.Entities;
+using Catalog.Core.Spac;
 
 using System;
 using System.Collections.Generic;
@@ -10,7 +11,7 @@ namespace Catalog.Core.Repositories
 {
     public interface IProductRepository
     {
-         Task<IEnumerable<Entities.Product>> GetProductsAsync();
+         Task<Pagination<Entities.Product>> GetProductsAsync(CatalogSpecParms catalogSpecParms);
 
          Task<Entities.Product> GetProductByIdAsync(string id);
 

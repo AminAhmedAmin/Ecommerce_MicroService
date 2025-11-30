@@ -1,4 +1,6 @@
 ﻿using Catalog.Application.Responses;
+using Catalog.Core.Spac;
+
 using MediatR;
 
 using System;
@@ -9,7 +11,13 @@ using System.Threading.Tasks;
 
 namespace Catalog.Application.Queries
 {
-    public class GetAllProductQuery : IRequest<IList<ProductResponseDto>>
+    public class GetAllProductQuery : IRequest<Pagination<ProductResponseDto>>
     {
+        public GetAllProductQuery( CatalogSpecParms parms)
+        {
+            Parms = parms;
+        }
+
+        public CatalogSpecParms Parms { get; }
     }
 }

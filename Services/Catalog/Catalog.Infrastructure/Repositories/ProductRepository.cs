@@ -1,5 +1,6 @@
 ﻿using Catalog.Core.Entities;
 using Catalog.Core.Repositories;
+using Catalog.Core.Spac;
 using Catalog.Infrastructure.Data.Contexts;
 
 using MongoDB.Driver;
@@ -23,9 +24,31 @@ namespace Catalog.Infrastructure.Repositories
 
         // =================== Products ===================
 
-        public async Task<IEnumerable<Product>> GetProductsAsync()
+        public async Task<Pagination<Product>> GetProductsAsync(CatalogSpecParms parms)
         {
-            return await _context.Products.Find(p => true).ToListAsync();
+            var filter = BuildProductFilter(parms);
+            var sort = BuildProductSort(parms);
+
+            var skip = (parms.PageIndex - 1) * parms.PageSize;
+
+            // 1) إجمالي عدد العناصر اللي بتنطبق عليها الفلاتر
+            var totalItems = await _context.Products.CountDocumentsAsync(filter);
+
+            // 2) البيانات بعد الفلترة + السورت + الباجينيشن
+            var items = await _context.Products
+                .Find(filter)
+                .Sort(sort)
+                .Skip(skip)
+                .Limit(parms.PageSize)
+                .ToListAsync();
+
+            // 3) بناء الـ Pagination object
+            return new Pagination<Product>(
+                pageIndex: parms.PageIndex,
+                pageSize: parms.PageSize,
+                count: (int)totalItems,          // لو حابب خلي Count long وعدّل الكلاس
+                data: items
+            );
         }
 
         public async Task<Product> GetProductByIdAsync(string id)
@@ -101,6 +124,52 @@ namespace Catalog.Infrastructure.Repositories
                 .Find(t => true)
                 .ToListAsync();
         }
+
+        // Helper methods to build filters and sorts based on CatalogSpecParms
+        private FilterDefinition<Product> BuildProductFilter(CatalogSpecParms parms)
+        {
+            var fb = Builders<Product>.Filter;
+            var filter = fb.Empty;
+
+            // Search
+            if (!string.IsNullOrWhiteSpace(parms.Search))
+            {
+                var regex = new MongoDB.Bson.BsonRegularExpression(parms.Search.Trim(), "i");
+                filter &= fb.Or(
+                    fb.Regex(x => x.Name, regex),
+                    fb.Regex(x => x.Description, regex)
+                );
+            }
+
+            // Brand
+            if (!string.IsNullOrWhiteSpace(parms.BrandId))
+            {
+                filter &= fb.Eq(x => x.Brand.Id, parms.BrandId);
+            }
+
+            // Type
+            if (!string.IsNullOrWhiteSpace(parms.TypeId))
+            {
+                filter &= fb.Eq(x => x.Type.Id, parms.TypeId);
+            }
+
+            return filter;
+        }
+
+        private SortDefinition<Product> BuildProductSort(CatalogSpecParms parms)
+        {
+            var sb = Builders<Product>.Sort;
+
+            return parms.Sort switch
+            {
+                "nameDesc" => sb.Descending(x => x.Name),
+                "priceAsc" => sb.Ascending(x => x.Price),
+                "priceDesc" => sb.Descending(x => x.Price),
+                _ => sb.Ascending(x => x.Name) // default
+            };
+        }
+
+
     }
 }
 

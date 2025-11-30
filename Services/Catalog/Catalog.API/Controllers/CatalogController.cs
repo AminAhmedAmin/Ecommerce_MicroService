@@ -1,6 +1,8 @@
 using Catalog.Application.Commands;
 using Catalog.Application.Queries;
 using Catalog.Application.Responses;
+using Catalog.Core.Spac;
+
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
@@ -17,9 +19,9 @@ namespace Catalog.API.Controllers
 
         [HttpGet("[action]")]
         [ProducesResponseType(typeof(IList<ProductResponseDto>), StatusCodes.Status200OK)]
-        public async Task<ActionResult<IList<ProductResponseDto>>> GetAllProducts()
+        public async Task<ActionResult<IList<ProductResponseDto>>> GetAllProducts( CatalogSpecParms parms)
         {
-            var query = new GetAllProductQuery();
+            var query = new GetAllProductQuery(parms);
             var products = await mediator.Send(query);
             return Ok(products);
         }

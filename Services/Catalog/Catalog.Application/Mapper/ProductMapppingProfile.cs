@@ -1,5 +1,6 @@
 ﻿using Catalog.Application.Commands;
 using Catalog.Core.Entities;
+using Catalog.Core.Spac;
 
 using System;
 using System.Collections.Generic;
@@ -20,6 +21,8 @@ namespace Catalog.Application.Mapper
             CreateMap<ProductBrand, Application.Responses.BrandResponseDto>().ReverseMap();
             CreateMap<Product, Application.Responses.ProductResponseDto>().ReverseMap();
             CreateMap<ProductType, Application.Responses.TypeResponseDto>().ReverseMap();
+            CreateMap<Pagination< Product>,  Pagination<Application.Responses.ProductResponseDto>>().ReverseMap();
+
 
             CreateMap<CreateProductCommand, Product>();
             CreateMap<UpdateProductCommand, Product>();
