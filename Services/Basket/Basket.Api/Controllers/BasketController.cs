@@ -4,9 +4,9 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Basket.Api.Controllers
 {
-    [ApiController]
-    [Route("api/[controller]")]
-    public class BasketController : ControllerBase
+    //[ApiController]
+    //[Route("api/[controller]")]
+    public class BasketController : BaseApiController
     {
         private readonly IBasketRepository _repository;
 
@@ -35,7 +35,7 @@ namespace Basket.Api.Controllers
         {
             var deleted = await _repository.DeleteCartAsync(userName);
             if (!deleted) return NotFound();
-            return NoContent();
+            return Ok(deleted);
         }
     }
 }
