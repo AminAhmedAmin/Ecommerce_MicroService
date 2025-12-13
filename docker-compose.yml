@@ -23,7 +23,7 @@ services:
     volumes:
       - catalogdata:/data/db
   basketdb:
-    image: redid:alpine
+    image: redis:alpine
     container_name: basketdb
     restart: always
     ports:
@@ -41,7 +41,41 @@ services:
     environment:
      - ASPNETCORE_URLS=http://+:8000
      - CasheSettings__ConnectionString=basketdb:6379
+  discountdb:
+    image: postgres:16-alpine
+    container_name: discountdb
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: DiscountDb
+    volumes:
+      - discountdata:/var/lib/postgresql/data
+  discount.api:
+    image: ${DOCKER_REGISTRY-}discountapi
+    build:
+      context: .
+      dockerfile: Services/Discount/Discount.API/Dockerfile
+    ports:
+      - "8002:8080"
+    depends_on:
+      - discountdb
+    environment:
+     - ASPNETCORE_URLS=http://+:8080
+     - ConnectionStrings__DiscountDb=Host=discountdb;Port=5432;Database=DiscountDb;Username=postgres;Password=postgres
+  portainer:
+    image: portainer/portainer-ce
+    container_name: portainer
+    command: -H unix:///var/run/docker.sock
+    ports:
+      - "9000:9000"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer_data:/data
    
 volumes:
   catalogdata:
+  discountdata:
+  portainer_data:
 
