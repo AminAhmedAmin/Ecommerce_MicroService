@@ -26,28 +26,16 @@ builder.Services.AddApiVersioning(options =>
 builder.Services.AddScoped<Basket.Core.Repositories.IBasketRepository, Basket.Infrastructure.Repositories.BasketRepository>();
 
 
-builder.Services.AddSwaggerGen(
-
-// options =>
-
-//options.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
-//{
-//    Title = "Catalog.API",
-//    Version = "v1", 
-//    Description = "The Catalog Microservice HTTP API. This is a Data-Driven/CRUD microservice sample",
-//} 
-);
-var app = builder.Build();
-
-
 builder.Services.AddStackExchangeRedisCache(options =>
 {
     options.Configuration = builder.Configuration.GetValue<string>("CacheSettings:ConnectionString");
 });
+builder.Services.AddSwaggerGen();
+var app = builder.Build();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
+   // app.MapOpenApi();
     app.UseDeveloperExceptionPage();
     app.UseSwagger();
     app.UseSwaggerUI();

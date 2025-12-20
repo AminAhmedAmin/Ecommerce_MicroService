@@ -40,7 +40,7 @@ services:
       - basketdb
     environment:
      - ASPNETCORE_URLS=http://+:8000
-     - CasheSettings__ConnectionString=basketdb:6379
+     - CacheSettings__ConnectionString=basketdb:6379
   discountdb:
     image: postgres:16-alpine
     container_name: discountdb
@@ -52,6 +52,11 @@ services:
       POSTGRES_DB: DiscountDb
     volumes:
       - discountdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
   discount.api:
     image: ${DOCKER_REGISTRY-}discountapi
     build:
@@ -73,7 +78,16 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - portainer_data:/data
-   
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    depends_on:
+      - discountdb   
 volumes:
   catalogdata:
   discountdata:
