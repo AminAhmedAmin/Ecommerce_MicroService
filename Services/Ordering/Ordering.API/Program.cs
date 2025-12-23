@@ -1,9 +1,14 @@
+using FluentValidation;
+using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Ordering.API.Middleware;
+using Ordering.Application.Behaviors;
 using Ordering.Application.Handlers;
 using Ordering.Application.Mapper;
 using Ordering.Core.Repositories;
 using Ordering.Infrastructure.Data;
 using Ordering.Infrastructure.Repositories;
+using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -25,11 +30,20 @@ builder.Services.AddAutoMapper(cfg =>
 // MediatR Configuration
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(CheckoutOrderHandler).Assembly));
 
+// FluentValidation Configuration
+builder.Services.AddValidatorsFromAssembly(typeof(CheckoutOrderHandler).Assembly);
+
+// MediatR Pipeline Behaviors
+builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
+
 // Repository Configuration
 builder.Services.AddScoped(typeof(IAsyncRepository<>), typeof(RepositoryBase<>));
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 
 var app = builder.Build();
+
+// Exception Handling Middleware (should be early in the pipeline)
+app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
