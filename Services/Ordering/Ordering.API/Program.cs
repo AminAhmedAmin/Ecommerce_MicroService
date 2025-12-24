@@ -8,6 +8,7 @@ using Ordering.Application.Mapper;
 using Ordering.Core.Repositories;
 using Ordering.Infrastructure.Data;
 using Ordering.Infrastructure.Repositories;
+using Ordering.API.Extensions;
 using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -34,6 +35,7 @@ builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(Check
 builder.Services.AddValidatorsFromAssembly(typeof(CheckoutOrderHandler).Assembly);
 
 // MediatR Pipeline Behaviors
+builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(UnhandledExceptionBehavior<,>));
 builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
 
 // Repository Configuration
@@ -41,6 +43,9 @@ builder.Services.AddScoped(typeof(IAsyncRepository<>), typeof(RepositoryBase<>))
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 
 var app = builder.Build();
+
+// Run migrations and seed database
+app.MigrateDatabase<OrderContext>(OrderContextSeed.Seed);
 
 // Exception Handling Middleware (should be early in the pipeline)
 app.UseMiddleware<ExceptionHandlingMiddleware>();
