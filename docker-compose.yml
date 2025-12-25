@@ -38,10 +38,14 @@ services:
       - "8001:8000"
     depends_on:
       - basketdb
+      - rabbitmq
     environment:
      - ASPNETCORE_URLS=http://+:8000
      - CacheSettings__ConnectionString=basketdb:6379
      - GrpcSettings__DiscountUrl=http://discount.api:8080
+     - EventBusSettings__HostName=rabbitmq
+     - EventBusSettings__ExchangeName=basket_checkout_exchange
+     - EventBusSettings__QueueName=basket_checkout_queue
   discountdb:
     image: postgres:16-alpine
     container_name: discountdb
@@ -113,12 +117,28 @@ services:
       - "8003:8080"
     depends_on:
       - orderdb
+      - rabbitmq
     environment:
      - ASPNETCORE_URLS=http://+:8080
      - ConnectionStrings__OrderingConnectionString=Server=orderdb,1433;Database=OrderDb;User Id=sa;Password=123456@Passw0rd;TrustServerCertificate=True;
+     - EventBusSettings__HostName=rabbitmq
+     - EventBusSettings__ExchangeName=basket_checkout_exchange
+     - EventBusSettings__QueueName=basket_checkout_queue
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
 volumes:
   catalogdata:
   discountdata:
   portainer_data:
   orderdata:
+  rabbitmq_data:
 

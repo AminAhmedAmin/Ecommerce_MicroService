@@ -1,5 +1,7 @@
+using Basket.Application.Commands;
 using Basket.Core.Entities;
 using Basket.Core.Repositories;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Basket.Api.Controllers
@@ -9,10 +11,12 @@ namespace Basket.Api.Controllers
     public class BasketController : BaseApiController
     {
         private readonly IBasketRepository _repository;
+        private readonly IMediator _mediator;
 
-        public BasketController(IBasketRepository repository)
+        public BasketController(IBasketRepository repository, IMediator mediator)
         {
             _repository = repository;
+            _mediator = mediator;
         }
 
         [HttpGet("{userName}")]
@@ -28,6 +32,15 @@ namespace Basket.Api.Controllers
         {
             var updated = await _repository.UpdateCartAsync(cart);
             return Ok(updated);
+        }
+
+        [HttpPost("checkout")]
+        public async Task<ActionResult> Checkout([FromBody] BasketCheckout basketCheckout)
+        {
+            var command = new CheckoutBasketCommand(basketCheckout);
+            var result = await _mediator.Send(command);
+            if (!result) return BadRequest("Basket not found");
+            return Accepted();
         }
 
         [HttpDelete("{userName}")]

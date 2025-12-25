@@ -3,6 +3,8 @@ using Basket.Application.Queries;
 using Discount.Grpc.Protos;
 using Basket.Application.GrpcServices;
 using Basket.Infrastructure.GrpcServices;
+using Basket.Infrastructure.EventBus;
+using EventBus.Messages.Common;
 
 using System.Reflection;
 
@@ -41,6 +43,12 @@ builder.Services.AddGrpcClient<DiscountProtoService.DiscountProtoServiceClient>(
     options.Address = new Uri(builder.Configuration["GrpcSettings:DiscountUrl"]);
 });
 builder.Services.AddScoped<IDiscountGrpcService, DiscountGrpcService>();
+
+// Event Bus Configuration
+var eventBusHostName = builder.Configuration["EventBusSettings:HostName"] ?? "localhost";
+var eventBusExchangeName = builder.Configuration["EventBusSettings:ExchangeName"] ?? "basket_checkout_exchange";
+builder.Services.AddSingleton<IEventBus>(sp => new EventBusService(eventBusHostName, eventBusExchangeName));
+
 var app = builder.Build();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

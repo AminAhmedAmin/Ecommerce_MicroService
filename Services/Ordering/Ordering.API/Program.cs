@@ -9,6 +9,7 @@ using Ordering.Core.Repositories;
 using Ordering.Infrastructure.Data;
 using Ordering.Infrastructure.Repositories;
 using Ordering.API.Extensions;
+using Ordering.API.EventBus;
 using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -41,6 +42,20 @@ builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBeh
 // Repository Configuration
 builder.Services.AddScoped(typeof(IAsyncRepository<>), typeof(RepositoryBase<>));
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
+
+// Event Bus Consumer Configuration
+builder.Services.AddScoped<BasketCheckoutConsumer>();
+
+var eventBusHostName = builder.Configuration["EventBusSettings:HostName"] ?? "localhost";
+var eventBusExchangeName = builder.Configuration["EventBusSettings:ExchangeName"] ?? "basket_checkout_exchange";
+var eventBusQueueName = builder.Configuration["EventBusSettings:QueueName"] ?? "basket_checkout_queue";
+
+builder.Services.AddHostedService(sp => new RabbitMQConsumerService(
+    eventBusHostName,
+    eventBusExchangeName,
+    eventBusQueueName,
+    sp,
+    sp.GetRequiredService<ILogger<RabbitMQConsumerService>>()));
 
 var app = builder.Build();
 
