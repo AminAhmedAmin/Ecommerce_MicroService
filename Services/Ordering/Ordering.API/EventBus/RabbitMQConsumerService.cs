@@ -8,8 +8,9 @@ namespace Ordering.API.EventBus
 {
     public class RabbitMQConsumerService : BackgroundService
     {
-        private readonly IConnection _connection;
-        private readonly IModel _channel;
+        private readonly IConnectionFactory _connectionFactory;
+        private IConnection _connection;
+        private IModel _channel;
         private readonly string _exchangeName;
         private readonly string _queueName;
         private readonly IServiceProvider _serviceProvider;
@@ -26,9 +27,12 @@ namespace Ordering.API.EventBus
             _queueName = queueName;
             _serviceProvider = serviceProvider;
             _logger = logger;
+            _connectionFactory = new ConnectionFactory { HostName = hostName };
+        }
 
-            var factory = new ConnectionFactory { HostName = hostName };
-            _connection = factory.CreateConnection();
+        private void InitializeRabbitMQListener()
+        {
+            _connection = _connectionFactory.CreateConnection();
             _channel = _connection.CreateModel();
 
             _channel.ExchangeDeclare(exchange: _exchangeName, type: ExchangeType.Fanout);
@@ -36,42 +40,61 @@ namespace Ordering.API.EventBus
             _channel.QueueBind(queue: _queueName, exchange: _exchangeName, routingKey: string.Empty);
         }
 
-        protected override Task ExecuteAsync(CancellationToken stoppingToken)
+        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
             stoppingToken.ThrowIfCancellationRequested();
 
-            var consumer = new EventingBasicConsumer(_channel);
-            consumer.Received += async (model, ea) =>
+            while (!stoppingToken.IsCancellationRequested)
             {
-                if (stoppingToken.IsCancellationRequested)
-                    return;
-
-                var body = ea.Body.ToArray();
-                var message = Encoding.UTF8.GetString(body);
-
-                _logger.LogInformation($"Received message: {message}");
-
                 try
                 {
-                    var checkoutEvent = JsonSerializer.Deserialize<BasketCheckoutEvent>(message);
-                    if (checkoutEvent != null)
+                    InitializeRabbitMQListener();
+
+                    var consumer = new EventingBasicConsumer(_channel);
+                    consumer.Received += async (model, ea) =>
                     {
-                        using (var scope = _serviceProvider.CreateScope())
+                        if (stoppingToken.IsCancellationRequested)
+                            return;
+
+                        var body = ea.Body.ToArray();
+                        var message = Encoding.UTF8.GetString(body);
+
+                        _logger.LogInformation($"Received message: {message}");
+
+                        try
                         {
-                            var consumerService = scope.ServiceProvider.GetRequiredService<BasketCheckoutConsumer>();
-                            await consumerService.Handle(checkoutEvent);
+                            var checkoutEvent = JsonSerializer.Deserialize<BasketCheckoutEvent>(message);
+                            if (checkoutEvent != null)
+                            {
+                                using (var scope = _serviceProvider.CreateScope())
+                                {
+                                    var consumerService = scope.ServiceProvider.GetRequiredService<BasketCheckoutConsumer>();
+                                    await consumerService.Handle(checkoutEvent);
+                                }
+                            }
                         }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError(ex, $"Error processing message: {message}");
+                        }
+                    };
+
+                    _channel.BasicConsume(queue: _queueName, autoAck: true, consumer: consumer);
+                    
+                    _logger.LogInformation("RabbitMQ Consumer Service started successfully.");
+
+                    // Keep the task alive while connected
+                    while (!stoppingToken.IsCancellationRequested)
+                    {
+                        await Task.Delay(1000, stoppingToken);
                     }
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, $"Error processing message: {message}");
+                     _logger.LogError(ex, "Failed to connect to RabbitMQ, retrying in 5s...");
+                     await Task.Delay(5000, stoppingToken);
                 }
-            };
-
-            _channel.BasicConsume(queue: _queueName, autoAck: true, consumer: consumer);
-
-            return Task.CompletedTask;
+            }
         }
 
         public override Task StopAsync(CancellationToken cancellationToken)

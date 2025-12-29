@@ -99,12 +99,12 @@ services:
     ports:
       - "1433:1433"
     environment:
-      SA_PASSWORD: "123456"
+      SA_PASSWORD: "P@ssword1"
       ACCEPT_EULA: "Y"
     volumes:
       - orderdata:/var/opt/mssql
     healthcheck:
-      test: /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "123456" -Q "SELECT 1" -C || exit 1
+      test: /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "P@ssword1" -Q "SELECT 1" -C || exit 1
       interval: 10s
       timeout: 5s
       retries: 5
@@ -121,7 +121,7 @@ services:
     environment:
      - ASPNETCORE_URLS=http://+:8080
      - ASPNETCORE_ENVIRONMENT=Development
-     - ConnectionStrings__OrderingConnectionString=Server=orderdb,1433;Database=OrderDb;User Id=sa;Password=123456;TrustServerCertificate=True;
+     - ConnectionStrings__OrderingConnectionString=Server=orderdb,1433;Database=OrderDb;User Id=sa;Password=P@ssword1;TrustServerCertificate=True;
      - EventBusSettings__HostName=rabbitmq
      - EventBusSettings__ExchangeName=basket_checkout_exchange
      - EventBusSettings__QueueName=basket_checkout_queue

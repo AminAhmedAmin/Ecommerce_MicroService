@@ -1,26 +1,6 @@
 ﻿{
-  "$schema": "https://json.schemastore.org/launchsettings.json",
   "profiles": {
-    "http": {
-      "commandName": "Project",
-      "dotnetRunMessages": true,
-      "applicationUrl": "http://localhost:8003",
-      "launchBrowser": true,
-      "launchUrl": "swagger",
-      "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
-      }
-    },
-    "https": {
-      "commandName": "Project",
-      "dotnetRunMessages": true,
-      "launchBrowser": false,
-      "applicationUrl": "https://localhost:7193;http://localhost:5218",
-      "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
-      }
-    },
-    "Ordering.API": {
+    "Basket.API": {
       "commandName": "Project",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
@@ -39,5 +19,6 @@
       "publishAllPorts": true,
       "useSSL": false
     }
-  }
+  },
+  "$schema": "https://json.schemastore.org/launchsettings.json"
 }
