@@ -12,7 +12,11 @@ using Ordering.API.Extensions;
 using Ordering.API.EventBus;
 using System.Reflection;
 
+using Common.Logging;
+using Serilog;
+
 var builder = WebApplication.CreateBuilder(args);
+builder.Host.UseSerilog(SeriLogger.Configure);
 
 // Add services to the container.
 builder.Services.AddControllers();

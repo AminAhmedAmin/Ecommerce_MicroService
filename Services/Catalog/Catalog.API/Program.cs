@@ -8,7 +8,11 @@ using Microsoft.Extensions.DependencyInjection;
 
 using System.Reflection;
 
+using Common.Logging;
+using Serilog;
+
 var builder = WebApplication.CreateBuilder(args);
+builder.Host.UseSerilog(SeriLogger.Configure);
 
 // Add services to the container.
 

@@ -8,7 +8,11 @@ using EventBus.Messages.Common;
 
 using System.Reflection;
 
+using Common.Logging;
+using Serilog;
+
 var builder = WebApplication.CreateBuilder(args);
+builder.Host.UseSerilog(SeriLogger.Configure);
 
 // Add services to the container.
 
