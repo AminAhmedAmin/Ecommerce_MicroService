@@ -9,12 +9,13 @@ services:
     depends_on:
       - cataogdb
     environment:
-     - ASPNETCORE_URLS=http://+:8000
-     - DatabaseSettings__ConnectionString=mongodb://cataogdb:27017
-     - DatabaseSettings__DatabaseName=CatalogDb
-     - DatabaseSettings__BrandsCollection=Brands
-     - DatabaseSettings__TypesCollection=Types
-     - DatabaseSettings__ProductsCollection=Products
+      - Serilog__ElasticsearchUrl=http://elasticsearch:9200
+      - ASPNETCORE_URLS=http://+:8000
+      - DatabaseSettings__ConnectionString=mongodb://cataogdb:27017
+      - DatabaseSettings__DatabaseName=CatalogDb
+      - DatabaseSettings__BrandsCollection=Brands
+      - DatabaseSettings__TypesCollection=Types
+      - DatabaseSettings__ProductsCollection=Products
   cataogdb:
     image: mongo
     container_name: cataogdb
@@ -28,7 +29,7 @@ services:
     restart: always
     ports:
       - "6379:6379"
-   
+
   basket.api:
     image: ${DOCKER_REGISTRY-}basketapi
     build:
@@ -40,12 +41,13 @@ services:
       - basketdb
       - rabbitmq
     environment:
-     - ASPNETCORE_URLS=http://+:8000
-     - CacheSettings__ConnectionString=basketdb:6379
-     - GrpcSettings__DiscountUrl=http://discount.api:8080
-     - EventBusSettings__HostName=rabbitmq
-     - EventBusSettings__ExchangeName=basket_checkout_exchange
-     - EventBusSettings__QueueName=basket_checkout_queue
+      - Serilog__ElasticsearchUrl=http://elasticsearch:9200
+      - ASPNETCORE_URLS=http://+:8000
+      - CacheSettings__ConnectionString=basketdb:6379
+      - GrpcSettings__DiscountUrl=http://discount.api:8080
+      - EventBusSettings__HostName=rabbitmq
+      - EventBusSettings__ExchangeName=basket_checkout_exchange
+      - EventBusSettings__QueueName=basket_checkout_queue
   discountdb:
     image: postgres:16-alpine
     container_name: discountdb
@@ -58,7 +60,7 @@ services:
     volumes:
       - discountdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -72,8 +74,9 @@ services:
     depends_on:
       - discountdb
     environment:
-     - ASPNETCORE_URLS=http://+:8080
-     - ConnectionStrings__DiscountDb=Host=discountdb;Port=5432;Database=DiscountDb;Username=postgres;Password=postgres
+      - Serilog__ElasticsearchUrl=http://elasticsearch:9200
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__DiscountDb=Host=discountdb;Port=5432;Database=DiscountDb;Username=postgres;Password=postgres
   portainer:
     image: portainer/portainer-ce
     container_name: portainer
@@ -119,12 +122,13 @@ services:
       - orderdb
       - rabbitmq
     environment:
-     - ASPNETCORE_URLS=http://+:8080
-     - ASPNETCORE_ENVIRONMENT=Development
-     - ConnectionStrings__OrderingConnectionString=Server=orderdb,1433;Database=OrderDb;User Id=sa;Password=P@ssword1;TrustServerCertificate=True;
-     - EventBusSettings__HostName=rabbitmq
-     - EventBusSettings__ExchangeName=basket_checkout_exchange
-     - EventBusSettings__QueueName=basket_checkout_queue
+      - Serilog__ElasticsearchUrl=http://elasticsearch:9200
+      - ASPNETCORE_URLS=http://+:8080
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__OrderingConnectionString=Server=orderdb,1433;Database=OrderDb;User Id=sa;Password=P@ssword1;TrustServerCertificate=True;
+      - EventBusSettings__HostName=rabbitmq
+      - EventBusSettings__ExchangeName=basket_checkout_exchange
+      - EventBusSettings__QueueName=basket_checkout_queue
   rabbitmq:
     image: rabbitmq:3-management-alpine
     container_name: rabbitmq
@@ -136,10 +140,33 @@ services:
       RABBITMQ_DEFAULT_PASS: guest
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
+  elasticsearch:
+    image: elasticsearch:8.11.1
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    volumes:
+      - esdata:/usr/share/elasticsearch/data
+  kibana:
+    image: kibana:8.11.1
+    container_name: kibana
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    ports:
+      - "5601:5601"
+    depends_on:
+      - elasticsearch
+
 volumes:
+  esdata:
   catalogdata:
   discountdata:
   portainer_data:
   orderdata:
   rabbitmq_data:
+
 
