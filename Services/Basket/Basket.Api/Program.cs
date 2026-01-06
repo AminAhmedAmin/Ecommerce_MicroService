@@ -1,5 +1,10 @@
 using Basket.Application.Mapper;
+using Basket.Application.Mapper;
 using Basket.Application.Queries;
+using Basket.Api.Swagger;
+using Asp.Versioning.ApiExplorer;
+using Microsoft.Extensions.Options;
+using Swashbuckle.AspNetCore.SwaggerGen;
 using Discount.Grpc.Protos;
 using Basket.Application.GrpcServices;
 using Basket.Infrastructure.GrpcServices;
@@ -30,7 +35,14 @@ builder.Services.AddApiVersioning(options =>
     options.AssumeDefaultVersionWhenUnspecified = true;
     options.DefaultApiVersion = new Asp.Versioning.ApiVersion(1, 0);
     options.ReportApiVersions = true;
+})
+.AddApiExplorer(options =>
+{
+    options.GroupNameFormat = "'v'VVV";
+    options.SubstituteApiVersionInUrl = true;
 });
+
+builder.Services.AddTransient<IConfigureOptions<SwaggerGenOptions>, ConfigureSwaggerOptions>();
 // Register Basket repository
 builder.Services.AddScoped<Basket.Core.Repositories.IBasketRepository, Basket.Infrastructure.Repositories.BasketRepository>();
 
@@ -53,6 +65,10 @@ var eventBusHostName = builder.Configuration["EventBusSettings:HostName"] ?? "lo
 var eventBusExchangeName = builder.Configuration["EventBusSettings:ExchangeName"] ?? "basket_checkout_exchange";
 builder.Services.AddSingleton<IEventBus>(sp => new EventBusService(eventBusHostName, eventBusExchangeName));
 
+// Event Bus V2 Configuration
+var eventBusExchangeNameV2 = builder.Configuration["EventBusSettings:ExchangeNameV2"] ?? "basket_checkout_exchange_v2";
+builder.Services.AddSingleton<IV2EventBus>(sp => new V2EventBusService(eventBusHostName, eventBusExchangeNameV2));
+
 var app = builder.Build();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -60,7 +76,14 @@ if (app.Environment.IsDevelopment())
    // app.MapOpenApi();
     app.UseDeveloperExceptionPage();
     app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerUI(options =>
+    {
+        var descriptions = app.Services.GetRequiredService<IApiVersionDescriptionProvider>().ApiVersionDescriptions;
+        foreach (var description in descriptions)
+        {
+            options.SwaggerEndpoint($"/swagger/{description.GroupName}/swagger.json", description.GroupName.ToUpperInvariant());
+        }
+    });
 }
 
 app.UseAuthorization();
