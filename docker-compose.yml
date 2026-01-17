@@ -48,6 +48,15 @@ services:
       - EventBusSettings__HostName=rabbitmq
       - EventBusSettings__ExchangeName=basket_checkout_exchange
       - EventBusSettings__QueueName=basket_checkout_queue
+  identity.api:
+    image: ${DOCKER_REGISTRY-}identityapi
+    build:
+      context: .
+      dockerfile: Services/Identity/Dockerfile
+    ports:
+      - "8009:8080"
+    environment:
+      - ASPNETCORE_URLS=http://+:8080
   discountdb:
     image: postgres:16-alpine
     container_name: discountdb

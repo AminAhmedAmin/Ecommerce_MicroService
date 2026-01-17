@@ -10,6 +10,7 @@ using System.Reflection;
 
 using Common.Logging;
 using Serilog;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Host.UseSerilog(SeriLogger.Configure);
@@ -29,6 +30,14 @@ builder.Services.AddApiVersioning(options =>
     options.DefaultApiVersion = new Asp.Versioning.ApiVersion(1, 0);
     options.ReportApiVersions = true;
 });
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.Authority = "http://identity.api:8080";
+        options.RequireHttpsMetadata = false;
+        options.TokenValidationParameters.ValidateAudience = false;
+    });
 
 builder.Services.AddSwaggerGen(
 
@@ -56,8 +65,9 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapControllers();
+app.MapControllers().RequireAuthorization();
 
 app.Run();

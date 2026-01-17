@@ -4,6 +4,7 @@ using Basket.Core.Repositories;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Mvc;
+using Asp.Versioning;
 
 namespace Basket.Api.Controllers
 {
